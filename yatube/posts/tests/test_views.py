@@ -15,7 +15,7 @@ class PostsPagesTests(TestCase):
         super().setUpClass()
         cls.user = User.objects.create_user(username='test_user')
         cls.group_1 = Group.objects.create(
-            title='Тестовй заголовок_1',
+            title='Тестовый заголовок_1',
             slug='test-slug_1',
             description='Описание группы_1'
         )
@@ -81,7 +81,7 @@ class PostsPagesTests(TestCase):
         post_text_0 = first_object.text
         self.assertEqual(post_text_0, 'Тестовый текст поста')
         self.assertEqual(
-            response.context['group'].title, 'Тестовй заголовок_1')
+            response.context['group'].title, 'Тестовый заголовок_1')
         self.assertEqual(
             response.context['group'].description, 'Описание группы_1')
 
