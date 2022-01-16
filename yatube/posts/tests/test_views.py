@@ -24,22 +24,15 @@ class PostsPagesTests(TestCase):
             slug='test-slug_2',
             description='Описание группы_2'
         )
-   #     cls.group_3 = Group.objects.create(
-   #         title='Тестовй заголовок_3',
-   #         slug='test-slug_3',
-   #         description='Описание группы_3'
-   #     )
         cls.post = Post.objects.create(
             text='Тестовый текст поста',
             author=cls.user,
             group=cls.group_1,
-#            pk=1,
         )
         cls.post_test = Post.objects.create(
             text='Тестовый текст второго поста',
             author=cls.user,
             group=cls.group_2,
- #           pk=2,
         )
 
     def setUp(self):
@@ -133,17 +126,14 @@ class PostsPagesTests(TestCase):
         first_object = response.context['page_obj'][1]
         post_text_1 = first_object.text
         self.assertEqual(post_text_1, 'Тестовый текст второго поста')
-
         response = self.authorized_client.get(
             reverse('posts:posts_list', kwargs={'slug': 'test-slug_2'}))
         first_object = response.context['page_obj'][0]
         post_text_1 = first_object.text
         self.assertEqual(post_text_1, 'Тестовый текст второго поста')
-        
         response = self.authorized_client.get(
             reverse('posts:posts_list', kwargs={'slug': 'test-slug_2'}))
         self.assertEqual(len(response.context['page_obj']), 1)
-
         response = self.authorized_client.get(
             reverse('posts:profile', kwargs={'username': 'test_user'}))
         first_object = response.context['page_obj'][1]
