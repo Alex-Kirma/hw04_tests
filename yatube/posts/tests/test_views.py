@@ -14,25 +14,20 @@ class PostsPagesTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(username='test_user')
-        cls.group_1 = Group.objects.create(
-            title='Тестовый заголовок_1',
-            slug='test-slug_1',
-            description='Описание группы_1'
+        cls.group = Group.objects.create(
+            title='Тестовый заголовок',
+            slug='test-slug',
+            description='Описание группы'
         )
-        cls.group_2 = Group.objects.create(
-            title='Тестовй заголовок_2',
+        cls.group_1 = Group.objects.create(
+            title='Тестовый заголовок_2',
             slug='test-slug_2',
             description='Описание группы_2'
         )
         cls.post = Post.objects.create(
             text='Тестовый текст поста',
             author=cls.user,
-            group=cls.group_1,
-        )
-        cls.post_test = Post.objects.create(
-            text='Тестовый текст второго поста',
-            author=cls.user,
-            group=cls.group_2,
+            group=cls.group,
         )
 
     def setUp(self):
@@ -44,7 +39,7 @@ class PostsPagesTests(TestCase):
         templates_pages_names = {
             reverse('posts:index'): 'posts/index.html',
             reverse('posts:posts_list', kwargs={
-                'slug': 'test-slug_1'}): 'posts/group_list.html',
+                'slug': 'test-slug'}): 'posts/group_list.html',
             reverse('posts:profile', kwargs={
                 'username': 'test_user'}): 'posts/profile.html',
             reverse('posts:post_detail', kwargs={
@@ -59,6 +54,7 @@ class PostsPagesTests(TestCase):
                 self.assertTemplateUsed(response, template)
 
     def test_index_page_show_correct_context(self):
+        """Проверка контекста на странице index."""
         response = self.authorized_client.get(reverse('posts:index'))
         first_object = response.context['page_obj'][0]
         posts_text_0 = first_object.text
@@ -67,18 +63,20 @@ class PostsPagesTests(TestCase):
         self.assertEqual(posts_author_0, self.user)
 
     def test_group_post_page_show_correct_context(self):
+        """Проверка контекста на странице group_list."""
         response = self.authorized_client.get(
 
-            reverse('posts:posts_list', kwargs={'slug': 'test-slug_1'}))
+            reverse('posts:posts_list', kwargs={'slug': 'test-slug'}))
         first_object = response.context['page_obj'][0]
         post_text_0 = first_object.text
         self.assertEqual(post_text_0, 'Тестовый текст поста')
         self.assertEqual(
-            response.context['group'].title, 'Тестовый заголовок_1')
+            response.context['group'].title, 'Тестовый заголовок')
         self.assertEqual(
-            response.context['group'].description, 'Описание группы_1')
+            response.context['group'].description, 'Описание группы')
 
     def test_profile_page_show_correct_context(self):
+        """Проверка контекста на странице profile."""
         response = self.authorized_client.get(
             reverse('posts:profile', kwargs={'username': 'test_user'}))
         number_of_posts_test = Post.objects.count()
@@ -90,13 +88,14 @@ class PostsPagesTests(TestCase):
             response.context['number_of_posts'], number_of_posts_test)
 
     def test_post_detail_page_show_correct_context(self):
+        """Проверка контекста на странице post_detail."""
         response = self.authorized_client.get(
             reverse('posts:post_detail', kwargs={'post_id': '1'}))
         self.assertEqual(response.context.get(
             'post').text, 'Тестовый текст поста')
 
     def test_page_create_post_form_correct_context_(self):
-        """Провертка формы create_post """
+        """Провертка формы create_post."""
         response = self.authorized_client.get(reverse('posts:create_post'))
         form_fields = {
             'text': forms.fields.CharField,
@@ -108,6 +107,7 @@ class PostsPagesTests(TestCase):
                 self.assertIsInstance(form_field, expected)
 
     def test_page_edit_post_form_correct_context(self):
+        """Провертка формы edit_post."""
         response = self.authorized_client.get(
             reverse('posts:edit', kwargs={'post_id': '1'}))
         form_fields = {
@@ -121,24 +121,38 @@ class PostsPagesTests(TestCase):
 
         self.assertEqual(response.context.get('is_edit'), True)
 
-    def test_post_group(self):
+    def test_post_group_for_index_page(self):
+        """Проверка что при создании поста указать группу,
+        пост появляется на главной странице."""
         response = self.authorized_client.get(reverse('posts:index'))
-        first_object = response.context['page_obj'][1]
-        post_text_1 = first_object.text
-        self.assertEqual(post_text_1, 'Тестовый текст второго поста')
-        response = self.authorized_client.get(
-            reverse('posts:posts_list', kwargs={'slug': 'test-slug_2'}))
         first_object = response.context['page_obj'][0]
-        post_text_1 = first_object.text
-        self.assertEqual(post_text_1, 'Тестовый текст второго поста')
+        post_text_0 = first_object.text
+        self.assertEqual(post_text_0, 'Тестовый текст поста')
+
+    def test_post_group_for_group_page(self):
+        """Проверка что при создании поста указать группу,
+        пост появляется на страницы выбранной группы."""
         response = self.authorized_client.get(
-            reverse('posts:posts_list', kwargs={'slug': 'test-slug_2'}))
+            reverse('posts:posts_list', kwargs={'slug': 'test-slug'}))
+        first_object = response.context['page_obj'][0]
+        post_text_0 = first_object.text
+        self.assertEqual(post_text_0, 'Тестовый текст поста')
+
+    def test_post_group_for_index_page(self):
+        """Проверка что при создании поста указать группу,
+        пост не попал в группу для которой не блы предназначен."""
+        response = self.authorized_client.get(
+            reverse('posts:posts_list', kwargs={'slug': 'test-slug'}))
         self.assertEqual(len(response.context['page_obj']), 1)
+
+    def test_post_3(self):
+        """Проверка что при создании поста указать группу,
+        пост появляется в профайле пользователя."""
         response = self.authorized_client.get(
             reverse('posts:profile', kwargs={'username': 'test_user'}))
-        first_object = response.context['page_obj'][1]
-        post_text_1 = first_object.text
-        self.assertEqual(post_text_1, 'Тестовый текст второго поста')
+        first_object = response.context['page_obj'][0]
+        post_text_0 = first_object.text
+        self.assertEqual(post_text_0, 'Тестовый текст поста')
 
 
 class PaginatorPagesTests(TestCase):
