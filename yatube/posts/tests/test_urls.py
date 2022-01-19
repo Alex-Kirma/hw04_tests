@@ -20,7 +20,7 @@ class PostsURLTests(TestCase):
         cls.group = Group.objects.create(
             title='Тестовй заголовок',
             slug='test-slug',
-            description='Описание группы'
+            description='Описание группы',
         )
 
     def setUp(self):
@@ -48,7 +48,7 @@ class PostsURLTests(TestCase):
         и редиректа неавторизированного пользователя."""
         templates_url_name = {
             '/create/': 'posts/create_post.html',
-            '/posts/1/edit/': 'posts/create_post.html',
+            f'/posts/{self.post.pk}/edit/': 'posts/create_post.html',
         }
         for address, template in templates_url_name.items():
             with self.subTest(address=address):

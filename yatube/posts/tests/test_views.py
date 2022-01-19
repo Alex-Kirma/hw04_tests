@@ -48,7 +48,7 @@ class PostsPagesTests(TestCase):
                 'post_id': self.post.pk}): 'posts/post_detail.html',
             reverse('posts:create_post'): 'posts/create_post.html',
             reverse('posts:edit', kwargs={
-                'post_id': '1'}): 'posts/create_post.html',
+                'post_id': self.post.pk}): 'posts/create_post.html',
         }
         for reverse_name, template in templates_pages_names.items():
             with self.subTest(reverse_name=reverse_name):
@@ -61,8 +61,10 @@ class PostsPagesTests(TestCase):
         first_object = response.context['page_obj'][0]
         posts_text_0 = first_object.text
         posts_author_0 = first_object.author
+        posts_group_0 = first_object.group
         self.assertEqual(posts_text_0, self.post.text)
         self.assertEqual(posts_author_0, self.user)
+        self.assertEqual(posts_group_0, self.post.group)
 
     def test_group_post_page_show_correct_context(self):
         """Проверка контекста на странице group_list."""
@@ -92,9 +94,11 @@ class PostsPagesTests(TestCase):
     def test_post_detail_page_show_correct_context(self):
         """Проверка контекста на странице post_detail."""
         response = self.authorized_client.get(
-            reverse('posts:post_detail', kwargs={'post_id': self.post.pk}))
-        self.assertEqual(response.context.get(
-            'post').text, self.post.text)
+            reverse('posts:post_detail', kwargs={'post_id': self.post.pk})
+        )
+        self.assertEqual(response.context.get('post').text, self.post.text)
+        self.assertEqual(response.context.get('post').author, self.post.author)
+        self.assertEqual(response.context.get('post').group, self.post.group)
 
     def test_page_create_post_form_correct_context_(self):
         """Провертка формы create_post."""
@@ -177,7 +181,7 @@ class PaginatorPagesTests(TestCase):
         Post.objects.bulk_create(posts)
         total_posts = Post.objects.all().count()
         cls.page_paginator = (total_posts // 10) + 1
-        cls.page_paginator_ostatok = total_posts % 10
+        cls.page_paginator_remains = total_posts % 10
 
     def setUp(self):
         self.guest_client = Client()
@@ -189,9 +193,9 @@ class PaginatorPagesTests(TestCase):
         response = self.client.get(
             reverse('posts:index') + f'?page={self.page_paginator}'
         )
-        if self.page_paginator_ostatok != 0:
+        if self.page_paginator_remains != 0:
             self.assertEqual(
-                len(response.context['page_obj']), self.page_paginator_ostatok
+                len(response.context['page_obj']), self.page_paginator_remains
             )
 
     def test_group_list_page_paginator(self):
@@ -202,9 +206,9 @@ class PaginatorPagesTests(TestCase):
         response = self.client.get(
             reverse('posts:posts_list', kwargs={'slug': self.group.slug})
             + f'?page={self.page_paginator}')
-        if self.page_paginator_ostatok != 0:
+        if self.page_paginator_remains != 0:
             self.assertEqual(
-                len(response.context['page_obj']), self.page_paginator_ostatok
+                len(response.context['page_obj']), self.page_paginator_remains
             )
 
     def test_profile_page_paginator(self):
@@ -215,7 +219,7 @@ class PaginatorPagesTests(TestCase):
         response = self.client.get(
             reverse('posts:profile', kwargs={'username': self.user.username})
             + f'?page={self.page_paginator}')
-        if self.page_paginator_ostatok != 0:
+        if self.page_paginator_remains != 0:
             self.assertEqual(len(
-                response.context['page_obj']), self.page_paginator_ostatok
+                response.context['page_obj']), self.page_paginator_remains
             )
