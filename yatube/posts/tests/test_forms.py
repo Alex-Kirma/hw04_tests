@@ -65,7 +65,7 @@ class FormsPagesTests(TestCase):
         post = Post.objects.get(pk=self.post.pk)
         self.assertEqual(post.text, form_data['text'])
         last_post = Post.objects.first()
-        self.assertEqual(last_post.text, self.post.text)
+        self.assertEqual(last_post.text, form_data['text'])
         self.assertEqual(last_post.author, self.post.author)
         self.assertEqual(last_post.group, self.post.group)
 
